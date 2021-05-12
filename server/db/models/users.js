@@ -9,11 +9,6 @@ module.exports = (sequelize) => {
         unique: true,
         primaryKey: true,
       },
-      login: {
-        allowNull: false,
-        unique: true,
-        type: Sequelize.DataTypes.STRING(25),
-      },
       mail: {
         allowNull: true,
         unique: true,

@@ -19,29 +19,25 @@ module.exports = (sequelize) => {
       },
       latlng: {
         allowNull: false,
-        unique: true,
-        type: Sequelize.DataTypes.GEOMETRY('POINT', 4326),
+        type: Sequelize.DataTypes.ARRAY(Sequelize.DataTypes.FLOAT),
       },
       operating_hours: {
         allowNull: true,
-        type: Sequelize.DataTypes.STRING,
+        type: Sequelize.DataTypes.TEXT,
       },
       operating_hours_date: {
         allowNull: true,
-        type: Sequelize.DataTypes.STRING,
+        type: Sequelize.DataTypes.TEXT,
       },
       tickets: {
         allowNull: true,
-        type: Sequelize.DataTypes.STRING,
+        type: Sequelize.DataTypes.TEXT,
       },
       description: {
         allowNull: true,
-        type: Sequelize.DataTypes.STRING,
+        type: Sequelize.DataTypes.TEXT,
       },
-      categorys:{
-        type: Sequelize.DataTypes.ARRAY(Sequelize.DataTypes.INTEGER),
-        allowNull: false,
-      }
+
 
 
     });

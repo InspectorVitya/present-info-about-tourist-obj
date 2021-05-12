@@ -2,62 +2,41 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-const sequelize = require('../lib/sequelize');
+const sequelize = require('../db/sequelize');
 
 const { models } = sequelize;
 
 module.exports.login_post = async (req, res) => {
   try {
-    const { login, password } = req.body;
-    const whereParams = {};
+    const { email, password } = req.body;
+    console.log(req.body);
 
-    whereParams.login = login;
-
-    const queryParams = {
-      where: whereParams,
+    const candidate = await models.users.findOne({
+      where: {mail: email},
       include: [
-        { model: models.roles }, { model: models.companies }],
-    };
-    const candidate = await models.users.findOne(queryParams);
+        { model: models.roles }, { model: models.users_info
+         }],
+    });
     if (candidate) {
-      if (candidate.blocked == true) {
+      if (candidate.blocked) {
         return res.status(403).json({ message: 'Вы заблокированы.' });
       }
 
       if (bcrypt.compareSync(password, candidate.password)) {
         const payload = {
           userId: candidate.id,
-          userRole: candidate.role.dataValues.role,
-          login: candidate.login,
+          userRole: candidate.role.dataValues.id,
+          login: candidate.users_info.name + " " + candidate.users_info.surname,
         };
-        if (candidate.companyId) {
-          const comp = await models.companies.findOne({
-            where: ({ id: candidate.companyId }),
-          });
-          payload.companyId = candidate.companyId;
-          payload.flat_plates = comp.flat_plates;
-        }
-        if (candidate.arrCompany != null) {
-          if (candidate.arrCompany.split(',').length > 0) payload.companyId = candidate.arrCompany.split(',');
-        }
+
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5h' });
 
-        // const tokenRfr = uuidv4()
-
-        // await models.refresh_tokens.create({
-        //   token: tokenRfr,
-        //   os,
-        //   browser: browser+version,
-        //   useragent: source,
-        //   expired_at: moment().add(7,'days').format(),
-        //   userId: candidate.id
-        // })
 
         return res.json({ token: `Bearer ${token}` });
       }
-      return res.status(404).json({ message: 'Пожалуйста, проверьте правильность написания логина и пароля.' });
+      return res.status(400).json({ message: 'Пожалуйста, проверьте правильность написания логина и пароля.' });
     }
-    return res.status(404).json({ message: 'Пожалуйста, проверьте правильность написания логина и пароля.' });
+    return res.status(400).json({ message: 'Пожалуйста, проверьте правильность написания логина и пароля.' });
   } catch (e) {
     console.log(e);
     return res.status(500).json({ message: 'Произошла ошибка на сервере.' });
@@ -67,69 +46,37 @@ module.exports.login_post = async (req, res) => {
 module.exports.singup_post = async (req, res) => {
   try {
     const {
-      company_id, surname, name, edit_store,
-      patronymic, phone_number, login, email,
-      adress, password, role, arrCompany,
+      firstName,
+      lastName,
+      email,
+      password,
     } = req.body;
-    const busy = [];
 
-    if (req.user.roleId == 'Младший Админ' && (role == 1 || role == 2)) { return res.status(403).json({ message: 'Нету доступа.' }); }
-    const loginBusy = await models.users.findOne({
-      where: { login },
+
+
+    const busy = await models.users.findOne({
+      where: { mail: email },
     });
+    console.log(busy);
 
-    if (loginBusy) { busy.push('login'); }
-
-    if (busy.length != 0) {
-      return res.status(404).json({ message: 'Проверьте введенные даныне.', busy });
+    if (busy) {
+      return res.status(400).json({ message: 'Почта занята.'});
     }
-    // добавление роли
+    // добавление соли
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    let newId;
-    let a;
-    if (company_id) {
-      a = await models.users.create({
-        email,
-        login,
-        edit_store,
-        password: hashedPassword,
-        companyId: company_id,
-        roleId: role,
-      });
 
-      newId = a.id;
-    } else {
-      if (arrCompany.length > 0) {
-        a = await models.users.create({
-          email,
-          login,
-          edit_store,
-          password: hashedPassword,
-          arrCompany: arrCompany.join(),
-          roleId: role,
-        });
-      } else {
-        a = await models.users.create({
-          email,
-          login,
-          edit_store,
-          password: hashedPassword,
-          roleId: role,
-        });
-      }
-      newId = a.id;
-    }
-
-    await models.users_info.create({
-      userId: newId,
-      surname,
-      name,
-      adress,
-      patronymic,
-      phone_number,
+    const newUser = await models.users.create({
+      mail: email,
+      password: hashedPassword,
+      roleId: 1,
     });
-    return res.status(201).json({ message: 'Пользователь создан.' });
+    await models.users_info.create({
+      userId: newUser.id,
+      surname: firstName,
+      name: lastName,
+    });
+    return res.status(201).json({ message: 'Пользователь создан.'});
   } catch (e) {
     console.log(e);
     return res.status(500).json({ message: 'Произошла ошибка на сервере.' });

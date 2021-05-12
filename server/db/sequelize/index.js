@@ -9,11 +9,17 @@ const sequelize = new Sequelize(DB_NAME, DB_USER_NAME, DB_PASSWORD, {
   port: DB_PORT,
 });
 
+
+
 const modelDefiners = [
   require('../models/users'),
-
   require('../models/users_info'),
-
+  require('../models/category_tourist_sites'),
+  require('../models/tourist_sites'),
+  require('../models/comments'),
+  require('../models/photos'),
+  require('../models/rating_tourist_sites'),
+  require('../models/roles'),
   // Add more models here...
 ];
 
