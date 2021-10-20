@@ -155,7 +155,17 @@ export default {
   async created() {
     await this.GET_CATEGORY();
     await this.JWT_TOKEN_FROM_LOCAL();
+    this.$http.interceptors.response.use(
+      (res) => res,
+      (e) => {
+        if (e.response.status === 401) {
+          this.LOGOUT();
+          return Promise.reject(e);
+        }
 
+        return Promise.reject(e);
+      },
+    );
     // await this.GET_SITES();
   },
 };

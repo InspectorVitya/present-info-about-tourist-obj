@@ -8,9 +8,11 @@ module.exports.user_get = async (req, res) => {
     const {id} = req.params
     const data = await models.users.findOne({
       where: {id},
+      attributes: ['id','mail','roleId'],
       include: [
       {
         model: models.users_info,
+        attributes: ['phone_number','surname','avatar','name','organization'],
       },
       ],
     })

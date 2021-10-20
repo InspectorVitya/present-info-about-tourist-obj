@@ -27,7 +27,7 @@ module.exports.login_post = async (req, res) => {
           userId: candidate.id,
           userRole: candidate.role.dataValues.id,
           login: candidate.users_info.name + " " + candidate.users_info.surname,
-        };
+        };4
 
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5h' });
 
